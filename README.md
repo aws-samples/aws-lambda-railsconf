@@ -1,4 +1,4 @@
-## AWS Ruby Lambda Rate Dogs
+## AWS Lambda - RailsConf
 
 Sample application using Ruby on AWS Lambda. Uses web and event invocations of AWS Lambda to upload and rate dogs.
 
