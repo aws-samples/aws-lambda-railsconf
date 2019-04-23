@@ -83,6 +83,7 @@ For the moment, we're going to:
 2. Delete the `tests` folder and all its contents.
 3. For the top level `Gemfile`, reduce it to test dependencies only:
 
+`Gemfile`
 ```ruby
 source "https://rubygems.org"
 
@@ -96,6 +97,7 @@ end
 
 Finally, delete the stub function from `template.yaml`, leaving us with the following:
 
+`template.yaml`
 ```yaml
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
@@ -132,6 +134,7 @@ touch posts.rb
 
 After we do this, we need to add our DynamoDB table to our application template, and define it in `posts.rb`. First, we're going to edit `template.yaml` in the root directory of our project, and add the following as our first resource:
 
+`template.yaml`
 ```yaml
 Resources:
   PostsTable:
@@ -145,6 +148,7 @@ Resources:
 
 We then need to create the equivalent table in `posts.rb` like so:
 
+`app/posts.rb`
 ```ruby
 require 'aws-record'
 
@@ -159,6 +163,7 @@ end
 
 And, ensure the `app/Gemfile` has our required dependency:
 
+`app/Gemfile`
 ```ruby
 source "https://rubygems.org"
 
@@ -177,6 +182,7 @@ touch test_web_api.rb
 
 We want to test the `WebApi` suite of handlers, specifically for basic `index`, `get`, and `create` behavior. In this case, copy the following test file into `test_web_api.rb`, so you can see tests passing as you go:
 
+`tests/app/test_web_api.rb`
 ```ruby
 require 'minitest/autorun'
 require 'json'
@@ -290,6 +296,7 @@ end
 
 We're going to be putting our AWS Lambda handlers into a class, so let's put a class skeleton into `web_api.rb`:
 
+`app/web_api.rb`
 ```ruby
 require_relative 'posts'
 
@@ -305,6 +312,7 @@ If we run `ruby tests/app/test_web_api.rb` we will now find that our three handl
 
 We're going to start by putting the method signature for an AWS Lambda handler into the `WebApi` class like so:
 
+`app/web_api.rb`
 ```ruby
 class WebApi
   class << self
@@ -322,6 +330,7 @@ There are a few important notes to understand before we proceed:
 
 To implement the `index` method, we're going to scan over our DynamoDB table and return JSON representations of the posts within. Conceptually, this is an API which takes no arguments, and the response hash includes the `posts` keyword for which the value is an array with up to 25 posts:
 
+`app/web_api.rb`
 ```ruby
 def index(event:,context:)
   posts = Posts.scan(limit: 25).page.map { |p| p.to_h }
@@ -344,6 +353,7 @@ A couple of notes about this implementation:
 
 Finally, we need to add our handler to our `template.yaml` file, so that it can be packaged and deployed. We put the following under the `Resources` key:
 
+`template.yaml`
 ```yaml
 Resources:
   WebApiIndex:
@@ -374,6 +384,7 @@ Our `get` function will also look at parsing raw event inputs. One thing to keep
 
 Let's start with the code we need:
 
+`app/web_api.rb`
 ```ruby
 def get(event:,context:)
   post_id = event["pathParameters"]["uuid"]
@@ -394,6 +405,7 @@ end
 
 After you confirm you're down to a single error when running `ruby tests/app/test_web_api.rb` we can add the resource to our `template.yaml` file:
 
+`template.yaml`
 ```yaml
 WebApiGet:
   Type: AWS::Serverless::Function
@@ -418,6 +430,7 @@ One key difference can be found in the `Path` value we set. When you use the `/p
 
 When creating a new post, we have to think a bit more about input validation. Users pass in JSON as the request body, which we parse for the post field values. Since we only accept two parameters from our user, we can fairly easily implement the allowed parameters pattern.
 
+`app/web_api.rb`
 ```ruby
 def create(event:,context:)
   params = _create_params(event["body"])
@@ -451,6 +464,7 @@ end
 
 After we add our final function definition to `template.yaml`, we are ready to deploy to AWS:
 
+`template.yaml`
 ```yaml
 WebApiCreate:
   Type: AWS::Serverless::Function
@@ -521,6 +535,7 @@ We're going to try out Amazon SQS and Amazon CloudWatch Logs events.
 
 Create the following as `tests/app/test_event_handlers.rb`, to provide a basic test suite for the event handler function we will write.
 
+`tests/app/test_event_handlers.rb`
 ```ruby
 require 'minitest/autorun'
 require_relative '../../app/event_handlers'
@@ -578,6 +593,7 @@ Note here that the structure of an SQS event message is different than an API Ga
 
 For creating an SQS queue, all we need to do is add this to the `Resources` of our `template.yaml` file:
 
+`template.yaml`
 ```yaml
 DeletePostQueue:
   Type: AWS::SQS::Queue
@@ -593,6 +609,7 @@ Now, we can define the `app/event_handlers.rb` file, which will contain our hand
 2. Validates that the message body is the exact message we expect, or raises an exception.
 3. If the message body matches, iterate over every post in our database and delete it.
 
+`app/event_handlers.rb`
 ```ruby
 require_relative 'posts'
 require 'json'
@@ -626,6 +643,7 @@ end
 
 Then as before, we add our new method under the `Resources` section of our `template.yaml` file. Note here that the `Events` section has changed to support a different event source type (SQS rather than Api), but otherwise much of the format remains the same.
 
+`template.yaml`
 ```yaml
 DeleteAllEventHandler:
   Type: AWS::Serverless::Function
@@ -647,6 +665,7 @@ DeleteAllEventHandler:
 
 Next, we want a way to trigger our event-based function. That's going to be a handler in our `web_api.rb` class, and a couple of additional private methods. What our handler will do is send off a "DELETE_ALL" message to Amazon SQS, and then return a `204` success code:
 
+`app/web_api.rb`
 ```ruby
 def delete_all(event:,context:)
   _sqs_client.send_message(
@@ -676,6 +695,7 @@ If you wanted to take this further, you could actually create a "Deletion Job" i
 
 For now, we just need to add our new web API to `Resources` in the `template.yaml` file:
 
+`template.yaml`
 ```yaml
 DeleteAllHandler:
   Type: AWS::Serverless::Function
@@ -728,52 +748,6 @@ curl $RAILSCONF_API_ENDPOINT
 
 The deletion generally goes from "placed in the queue" to "complete" in a fraction of a second, so the final command will likely show an empty result.
 
-### 2.X: Creating a CloudWatch Logs Monitor Function (Optional)
-
-```yaml
-  LogErrorEventHandler:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: app/
-      Handler: event_handlers.EventHandlers.delete_all_posts
-      Runtime: ruby2.5
-      Environment:
-        Variables:
-          SNS_TOPIC_ARN: !Ref NotificationTopic
-      Policies:
-        - SNSPublishMessagePolicy:
-            TopicName: !Ref NotificationTopic
-      Events:
-        LogErrorEvent:
-          Type: CloudWatchLogs
-          Properties:
-            LogGroupName: !Sub /aws/lambda/${DeleteAllEventHandler}
-            FilterPattern: "[ERROR]"
-          DependsOn: DeleteAllEventHandler
-  DeletePostQueue:
-    Type: AWS::SQS::Queue
-  NotificationTopic:
-    Type: AWS::SNS::Topic
-```
-
-```ruby
-SNS = Aws::SNS::Client.new
-SNS_TOPIC_ARN = ENV["SNS_TOPIC_ARN"]
-  
-    def log_error_handler(event:,context:)
-      encoded = event["awslogs"]["data"]
-      decoded = JSON.parse(Base64.decode64(encoded))
-      decoded["logEvents"].each do |event|
-        time = Time.at(event["timestamp"])
-        message = event["message"]
-        SNS.publish(
-          topic_arn: SNS_TOPIC_ARN,
-          message: "#{time}: #{message}"
-        )
-      end
-    end
-```
-
 ## Exercise 3: Creating CloudWatch Alarms
 
 In this workshop, we're trying to not only build our first serverless applications, but get an idea of how to productionize our application. Building a CI/CD pipeline is part of that. The next part is visibility.
@@ -786,6 +760,7 @@ The intention of this alarm is to raise an alarm when your function begins to th
 
 Let's add the following to our `template.yaml` file:
 
+`template.yaml`
 ```yaml
   WebApiIndexErrorAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -810,6 +785,7 @@ To deploy, just zip and upload your source to your S3 bucket, and let your deplo
 
 One important feature to keep in mind when designing latency alarms is that you can use extended statistics such as p-thresholds for latency, which are a more useful metric than averages for most use cases. We're going to build two latency alarms, p50 and p99 for our "Index" API function.
 
+`template.yaml`
 ```yaml
   WebApiIndexLatencyP50Alarm:
     Type: AWS::CloudWatch::Alarm
@@ -854,6 +830,7 @@ There are a couple pieces of configuration here that merit extra attention:
 
 One good way to get visibility into failures in event-based functions that use Amazon SQS is to create a dead letter queue, where messages that repeatedly fail to process are placed for manual investigation. Combined with an alarm, you can be alerted in the event that a message has failed its maximum retries.
 
+`template.yaml`
 ```yaml
   DeletePostQueue:
     Type: AWS::SQS::Queue
@@ -901,6 +878,7 @@ Included here is a CloudFormation template that creates a 3-step deployment proc
 
 I recommend making a new folder (for e.g., `pipeline`), and create this file as `pipeline-template.yml` inside that folder. This is not the same template you use for your application, it's going to build and deploy your application template.
 
+`pipeline/pipeline-template.yml`
 ```yaml
 Parameters:
   AppStackName:
@@ -1221,6 +1199,7 @@ In the root directory of our project (not in the `app/` folder), we're going to 
 
 Essentially, we are going to run our unit tests, and then perform the build and package steps manually. All we need to pass on to the next stage after this is the `packaged.yaml` file generated by the package step.
 
+`buildspec.yml`
 ```yaml
 version: 0.2
 
