@@ -1,6 +1,6 @@
 ## AWS Lambda - RailsConf
 
-Sample application using Ruby on AWS Lambda. Uses web and event invocations of AWS Lambda to upload and rate dogs.
+Instructions and examples for the workshop "Going Serverless with Ruby on AWS Lambda" at RailsConf 2019.
 
 ## License Summary
 
