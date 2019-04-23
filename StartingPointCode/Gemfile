@@ -1,0 +1,8 @@
+source "https://rubygems.org"
+
+# Load app Gemfile dependencies
+eval(IO.read("app/Gemfile"), binding)
+
+group :test do
+  gem 'minitest', '~> 5.11'
+end

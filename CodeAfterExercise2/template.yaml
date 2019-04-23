@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    railsconf2019
+
+    Sample SAM Template for railsconf2019
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+
+Resources:
+  WebApiIndex:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: app/
+      Handler: web_api.WebApi.index
+      Runtime: ruby2.5
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: Posts
+      Events:
+        ApiIndex:
+          Type: Api
+          Properties:
+            Path: /posts
+            Method: GET
+  WebApiGet:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: app/
+      Handler: web_api.WebApi.get
+      Runtime: ruby2.5
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: Posts
+      Events:
+        ApiGet:
+          Type: Api
+          Properties:
+            Path: /posts/{uuid}
+            Method: GET
+  WebApiCreate:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: app/
+      Handler: web_api.WebApi.create
+      Runtime: ruby2.5
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: Posts
+      Events:
+        ApiCreate:
+          Type: Api
+          Properties:
+            Path: /posts
+            Method: POST
+  DeleteAllEventHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: app/
+      Handler: event_handlers.EventHandlers.delete_all_posts
+      Runtime: ruby2.5
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: Posts
+      Events:
+        QueueEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt DeletePostQueue.Arn
+  DeleteAllHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: app/
+      Handler: web_api.WebApi.delete_all
+      Runtime: ruby2.5
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref DeletePostQueue
+      Policies:
+        SQSSendMessagePolicy:
+          QueueName: !GetAtt DeletePostQueue.QueueName
+      Events:
+        DeleteAllApi:
+          Type: Api
+          Properties:
+            Path: /posts
+            Method: DELETE
+  DeletePostQueue:
+    Type: AWS::SQS::Queue
+  PostsTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: Posts
+      PrimaryKey:
+        Name: post_uuid
+        Type: String
+
+Outputs:
+  ApiEndpoint:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
