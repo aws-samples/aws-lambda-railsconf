@@ -140,7 +140,6 @@ Resources:
   PostsTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
-      TableName: Posts
       PrimaryKey:
         Name: post_uuid
         Type: String
@@ -154,6 +153,7 @@ require 'aws-record'
 
 class Posts
   include Aws::Record
+  set_table_name(ENV["TABLE_NAME"])
   string_attr :post_uuid, hash_key: true
   string_attr :title
   string_attr :body
@@ -364,7 +364,10 @@ Resources:
       Runtime: ruby2.5
       Policies:
         - DynamoDBReadPolicy:
-            TableName: Posts
+            TableName: !Ref PostsTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PostsTable
       Events:
         ApiIndex:
           Type: Api
@@ -415,7 +418,10 @@ WebApiGet:
     Runtime: ruby2.5
     Policies:
       - DynamoDBReadPolicy:
-          TableName: Posts
+          TableName: !Ref PostsTable
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref PostsTable
     Events:
       ApiGet:
         Type: Api
@@ -474,7 +480,10 @@ WebApiCreate:
     Runtime: ruby2.5
     Policies:
       - DynamoDBCrudPolicy:
-          TableName: Posts
+          TableName: !Ref PostsTable
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref PostsTable
     Events:
       ApiCreate:
         Type: Api
@@ -653,7 +662,10 @@ DeleteAllEventHandler:
     Runtime: ruby2.5
     Policies:
       - DynamoDBCrudPolicy:
-          TableName: Posts
+          TableName: !Ref PostsTable
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref PostsTable
     Events:
       QueueEvent:
         Type: SQS
