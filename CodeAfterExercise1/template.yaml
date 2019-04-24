@@ -20,7 +20,10 @@ Resources:
       Runtime: ruby2.5
       Policies:
         - DynamoDBReadPolicy:
-            TableName: Posts
+            TableName: !Ref PostsTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PostsTable
       Events:
         ApiIndex:
           Type: Api
@@ -35,7 +38,10 @@ Resources:
       Runtime: ruby2.5
       Policies:
         - DynamoDBReadPolicy:
-            TableName: Posts
+            TableName: !Ref PostsTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PostsTable
       Events:
         ApiGet:
           Type: Api
@@ -50,7 +56,10 @@ Resources:
       Runtime: ruby2.5
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: Posts
+            TableName: !Ref PostsTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PostsTable
       Events:
         ApiCreate:
           Type: Api
@@ -60,7 +69,6 @@ Resources:
   PostsTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
-      TableName: Posts
       PrimaryKey:
         Name: post_uuid
         Type: String

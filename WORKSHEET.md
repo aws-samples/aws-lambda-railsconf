@@ -2,6 +2,19 @@
 
 In this lab, we're going to develop and deploy both web and event-based functions to AWS Lambda, as well as introduce continuous deployment to our application, and then show how we can incorporate web frameworks. We'll also have an exercise to explore options for alarm configuration.
 
+## Exercise -1: How To Complete This Workshop
+
+A Note: This advice applies primarily to the live workshop. If you're running this workshop on your own, opening a GitHub issue is the easiest way to get help.
+
+The exercises in this workshop are meant to be completed in order. Ideally, you've already completed Exercise 0 and installed the dependencies for this workshop. If not, I recommend starting right away - the introductory slides will be on video after the conference.
+
+I'll be live coding Exercises 1-3 after the introductory slides, with some explanation of what we're doing in each step. I generally recommend that you try to complete the exercises during the workshop, as we're both here to help you live and in person. However, if you fall behind, or if an instruction is confusing and you get stuck, I've included snapshots of what the code should look like after exercises 1, 2, 3, and even 4 (the optional/take-home exercise) are complete. Feel free to compare code, or copy one of those snapshots and resume from them.
+
+Some pointers to keep in mind:
+
+* Make sure you pay attention to `--region` settings, when used. One key point is that the region your source bucket is in, much match the region you deploy to.
+* Because the template file is YAML formatted, indentation matters. If you're getting a deployment error that doesn't make sense, there's a good chance your YAML file isn't indented properly somewhere.
+
 ## Exercise 0: Setup
 
 ### Set Up Ruby 2.5
@@ -15,9 +28,11 @@ It is important to make sure that you're using Ruby 2.5. Any minor version works
 
 ```shell
 # in rbenv
+rbenv install 2.5.5 # if not already installed
 export RBENV_VERSION=2.5.5
 
 # in rvm
+rvm install 2.5.5 # if not already installed
 rvm use 2.5.5
 
 # verification
@@ -44,8 +59,10 @@ The installation steps for AWS SAM CLI are documented in the [AWS SAM CLI develo
 
 You will need to have an S3 bucket to use for storing your code artifacts when deploying your application. You may use an existing bucket (just make sure to note its region for later), or you can create one using the AWS CLI like so:
 
-```
-aws s3api create-bucket --bucket my-railsconf-source-bucket --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2
+```shell
+# substitute a unique name for your bucket
+export $RAILSCONF_SOURCE_BUCKET=my-railsconf-source-bucket
+aws s3api create-bucket --bucket $RAILSCONF_SOURCE_BUCKET --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2
 ```
 
 Because S3 bucket names are globally unique, don't use that exact bucket name. Just ensure that:
@@ -376,6 +393,28 @@ Resources:
             Method: GET
 ```
 
+#### Bonus: Deploy and Run Your First Lambda Function
+
+At this point, though we haven't completed all of our APIs, we can deploy and see this running on AWS!
+
+```shell
+sam build
+sam package --template-file .aws-sam/build/template.yaml --output-template-file packaged.yaml --s3-bucket $RAILSCONF_SOURCE_BUCKET
+sam deploy --template-file packaged.yaml --stack-name railsconf2019 --capabilities CAPABILITY_IAM --region us-west-2
+aws cloudformation describe-stacks --stack-name railsconf2019 --region us-west-2 --query 'Stacks[].Outputs'
+```
+
+If you did not set `$RAILSCONF_SOURCE_BUCKET` in Exercise 0, make sure you set it or use your source bucket name above.
+
+The final command should give you an endpoint for your API, and if you add `posts` to the end of it for your path, you can call it with curl like so:
+
+```shell
+export RAILSCONF_API_ENDPOINT=https://12my34api56id.execute-api.us-west-2.amazonaws.com/Prod/posts
+curl $RAILSCONF_API_ENDPOINT
+```
+
+Make sure to substitute your actual API path here as returned from CloudFormation. You should see an empty response like `{"posts":[]}`, but you've deployed a function to AWS Lambda! We'll finish the implementation now.
+
 #### 1.4.2: Get Function
 
 At this point, we can see a pattern for adding new web API functions:
@@ -496,11 +535,11 @@ Note here that we are using a different policy for DynamoDB access which allows 
 
 ### 1.5: Deploying to AWS
 
-Run the following set of commands, substituting the bucket from Exercise 0, and the region of the bucket for `us-west-2` if you used another region. The region must match the region of the bucket in which you're storing your function source.
+Run the following set of commands, using the bucket from Exercise 0, and the region of the bucket for `us-west-2` if you used another region. The region must match the region of the bucket in which you're storing your function source.
 
 ```
 sam build
-sam package --template-file .aws-sam/build/template.yaml --output-template-file packaged.yaml --s3-bucket NameOfBucketFromExerciseZero
+sam package --template-file .aws-sam/build/template.yaml --output-template-file packaged.yaml --s3-bucket $RAILSCONF_SOURCE_BUCKET
 sam deploy --template-file packaged.yaml --stack-name railsconf2019 --capabilities CAPABILITY_IAM --region us-west-2
 aws cloudformation describe-stacks --stack-name railsconf2019 --region us-west-2 --query 'Stacks[].Outputs'
 ```
@@ -735,7 +774,7 @@ We can build and deploy our set of handlers using the same pattern as before:
 
 ```
 sam build
-sam package --template-file .aws-sam/build/template.yaml --output-template-file packaged.yaml --s3-bucket NameOfBucketFromExerciseZero
+sam package --template-file .aws-sam/build/template.yaml --output-template-file packaged.yaml --s3-bucket $RAILSCONF_SOURCE_BUCKET
 sam deploy --template-file packaged.yaml --stack-name railsconf2019 --capabilities CAPABILITY_IAM --region us-west-2
 aws cloudformation describe-stacks --stack-name railsconf2019 --region us-west-2 --query 'Stacks[].Outputs'
 ```

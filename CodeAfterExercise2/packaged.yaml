@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'railsconf2019
+
+  Sample SAM Template for railsconf2019
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL for Prod stage
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+Resources:
+  DeleteAllEventHandler:
+    Properties:
+      CodeUri: s3://alexwood-pdx/ff01e20874dc6401643c7321a7b81022
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: PostsTable
+      Events:
+        QueueEvent:
+          Properties:
+            Queue:
+              Fn::GetAtt:
+              - DeletePostQueue
+              - Arn
+          Type: SQS
+      Handler: event_handlers.EventHandlers.delete_all_posts
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PostsTable
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+  DeleteAllHandler:
+    Properties:
+      CodeUri: s3://alexwood-pdx/e1bc4f2523cbb23cbec2ec0daea62032
+      Environment:
+        Variables:
+          SQS_QUEUE_URL:
+            Ref: DeletePostQueue
+      Events:
+        DeleteAllApi:
+          Properties:
+            Method: DELETE
+            Path: /posts
+          Type: Api
+      Handler: web_api.WebApi.delete_all
+      Policies:
+        SQSSendMessagePolicy:
+          QueueName:
+            Fn::GetAtt:
+            - DeletePostQueue
+            - QueueName
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+  DeletePostQueue:
+    Type: AWS::SQS::Queue
+  PostsTable:
+    Properties:
+      PrimaryKey:
+        Name: post_uuid
+        Type: String
+    Type: AWS::Serverless::SimpleTable
+  WebApiCreate:
+    Properties:
+      CodeUri: s3://alexwood-pdx/5eb5f55e167efe2f5e466ca7a1e31040
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: PostsTable
+      Events:
+        ApiCreate:
+          Properties:
+            Method: POST
+            Path: /posts
+          Type: Api
+      Handler: web_api.WebApi.create
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PostsTable
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+  WebApiGet:
+    Properties:
+      CodeUri: s3://alexwood-pdx/5f11a6b8e5b7e4f38bbec303f9f2c068
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: PostsTable
+      Events:
+        ApiGet:
+          Properties:
+            Method: GET
+            Path: /posts/{uuid}
+          Type: Api
+      Handler: web_api.WebApi.get
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: PostsTable
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+  WebApiIndex:
+    Properties:
+      CodeUri: s3://alexwood-pdx/e4e0b8abbb8d478d0f91c12456c5d38a
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: PostsTable
+      Events:
+        ApiIndex:
+          Properties:
+            Method: GET
+            Path: /posts
+          Type: Api
+      Handler: web_api.WebApi.index
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: PostsTable
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

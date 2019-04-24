@@ -1,0 +1,201 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'railsconf2019
+
+  Sample SAM Template for railsconf2019
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL for Prod stage
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+Resources:
+  DeleteAllEventHandler:
+    Properties:
+      CodeUri: s3://alexwood-pdx/b3465b2b2b91339f252bed0da8afe9a9
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: PostsTable
+      Events:
+        QueueEvent:
+          Properties:
+            Queue:
+              Fn::GetAtt:
+              - DeletePostQueue
+              - Arn
+          Type: SQS
+      Handler: event_handlers.EventHandlers.delete_all_posts
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PostsTable
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+  DeleteAllHandler:
+    Properties:
+      CodeUri: s3://alexwood-pdx/f5a224e5f8583387e404c42793802b53
+      Environment:
+        Variables:
+          SQS_QUEUE_URL:
+            Ref: DeletePostQueue
+      Events:
+        DeleteAllApi:
+          Properties:
+            Method: DELETE
+            Path: /posts
+          Type: Api
+      Handler: web_api.WebApi.delete_all
+      Policies:
+        SQSSendMessagePolicy:
+          QueueName:
+            Fn::GetAtt:
+            - DeletePostQueue
+            - QueueName
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+  DeletePostDLQAlarm:
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+      - Name: QueueName
+        Value:
+          Fn::GetAtt:
+          - DeletePostDeadLetterQueue
+          - QueueName
+      EvaluationPeriods: 5
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: breaching
+    Type: AWS::CloudWatch::Alarm
+  DeletePostDeadLetterQueue:
+    Type: AWS::SQS::Queue
+  DeletePostQueue:
+    Properties:
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+          - DeletePostDeadLetterQueue
+          - Arn
+        maxReceiveCount: 5
+    Type: AWS::SQS::Queue
+  PostsTable:
+    Properties:
+      PrimaryKey:
+        Name: post_uuid
+        Type: String
+    Type: AWS::Serverless::SimpleTable
+  WebApiCreate:
+    Properties:
+      CodeUri: s3://alexwood-pdx/13ec3076d2ba8674c57f50ca3156d2f3
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: PostsTable
+      Events:
+        ApiCreate:
+          Properties:
+            Method: POST
+            Path: /posts
+          Type: Api
+      Handler: web_api.WebApi.create
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PostsTable
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+  WebApiGet:
+    Properties:
+      CodeUri: s3://alexwood-pdx/3a093bb0b1b21b14072840fb70a2d95c
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: PostsTable
+      Events:
+        ApiGet:
+          Properties:
+            Method: GET
+            Path: /posts/{uuid}
+          Type: Api
+      Handler: web_api.WebApi.get
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: PostsTable
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+  WebApiIndex:
+    Properties:
+      CodeUri: s3://alexwood-pdx/1d91fc71249f5c230610be61f27be9e6
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: PostsTable
+      Events:
+        ApiIndex:
+          Properties:
+            Method: GET
+            Path: /posts
+          Type: Api
+      Handler: web_api.WebApi.index
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: PostsTable
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+  WebApiIndexErrorAlarm:
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+      - Name: FunctionName
+        Value:
+          Ref: WebApiIndex
+      EvaluationPeriods: 3
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: missing
+    Type: AWS::CloudWatch::Alarm
+  WebApiIndexLatencyP50Alarm:
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+      - Name: FunctionName
+        Value:
+          Ref: WebApiIndex
+      EvaluationPeriods: 3
+      ExtendedStatistic: p50
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Period: 60
+      Threshold: 250
+      TreatMissingData: missing
+      Unit: Milliseconds
+    Type: AWS::CloudWatch::Alarm
+  WebApiIndexLatencyP99Alarm:
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+      - Name: FunctionName
+        Value:
+          Ref: WebApiIndex
+      EvaluationPeriods: 3
+      ExtendedStatistic: p99
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Period: 60
+      Threshold: 1000
+      TreatMissingData: missing
+      Unit: Milliseconds
+    Type: AWS::CloudWatch::Alarm
+Transform: AWS::Serverless-2016-10-31

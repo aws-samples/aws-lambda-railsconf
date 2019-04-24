@@ -20,7 +20,10 @@ Resources:
       Runtime: ruby2.5
       Policies:
         - DynamoDBReadPolicy:
-            TableName: Posts
+            TableName: !Ref PostsTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PostsTable
       Events:
         ApiIndex:
           Type: Api
@@ -30,7 +33,6 @@ Resources:
   WebApiIndexErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: RailsconfApiIndexErrors
       Namespace: AWS/Lambda
       MetricName: Errors
       Dimensions:
@@ -45,7 +47,6 @@ Resources:
   WebApiIndexLatencyP50Alarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: RailsconfApiIndexLatencyP50
       Namespace: AWS/Lambda
       MetricName: Duration
       Dimensions:
@@ -61,7 +62,6 @@ Resources:
   WebApiIndexLatencyP99Alarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: RailsconfApiIndexLatencyP99
       Namespace: AWS/Lambda
       MetricName: Duration
       Dimensions:
@@ -82,7 +82,10 @@ Resources:
       Runtime: ruby2.5
       Policies:
         - DynamoDBReadPolicy:
-            TableName: Posts
+            TableName: !Ref PostsTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PostsTable
       Events:
         ApiGet:
           Type: Api
@@ -97,7 +100,10 @@ Resources:
       Runtime: ruby2.5
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: Posts
+            TableName: !Ref PostsTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PostsTable
       Events:
         ApiCreate:
           Type: Api
@@ -112,7 +118,10 @@ Resources:
       Runtime: ruby2.5
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: Posts
+            TableName: !Ref PostsTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PostsTable
       Events:
         QueueEvent:
           Type: SQS
@@ -147,7 +156,6 @@ Resources:
   DeletePostDLQAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: DeletePostDLQAlarm
       Namespace: AWS/SQS
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
@@ -162,7 +170,6 @@ Resources:
   PostsTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
-      TableName: Posts
       PrimaryKey:
         Name: post_uuid
         Type: String

@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'railsconf2019
+
+  Sample SAM Template for railsconf2019
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL for Prod stage
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+Resources:
+  PostsTable:
+    Properties:
+      PrimaryKey:
+        Name: post_uuid
+        Type: String
+    Type: AWS::Serverless::SimpleTable
+  WebApiCreate:
+    Properties:
+      CodeUri: s3://alexwood-pdx/96625a3abfccb79264f5c721663c16ed
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: PostsTable
+      Events:
+        ApiCreate:
+          Properties:
+            Method: POST
+            Path: /posts
+          Type: Api
+      Handler: web_api.WebApi.create
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PostsTable
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+  WebApiGet:
+    Properties:
+      CodeUri: s3://alexwood-pdx/2a5c9e65cae4459f719a089e7bbe093a
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: PostsTable
+      Events:
+        ApiGet:
+          Properties:
+            Method: GET
+            Path: /posts/{uuid}
+          Type: Api
+      Handler: web_api.WebApi.get
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: PostsTable
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+  WebApiIndex:
+    Properties:
+      CodeUri: s3://alexwood-pdx/55049d2e5a8ab676c17192ce0ac1c265
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: PostsTable
+      Events:
+        ApiIndex:
+          Properties:
+            Method: GET
+            Path: /posts
+          Type: Api
+      Handler: web_api.WebApi.index
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: PostsTable
+      Runtime: ruby2.5
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31
