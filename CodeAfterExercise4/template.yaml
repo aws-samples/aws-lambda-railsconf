@@ -33,7 +33,6 @@ Resources:
   WebApiIndexErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: RailsconfApiIndexErrors
       Namespace: AWS/Lambda
       MetricName: Errors
       Dimensions:
@@ -48,7 +47,6 @@ Resources:
   WebApiIndexLatencyP50Alarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: RailsconfApiIndexLatencyP50
       Namespace: AWS/Lambda
       MetricName: Duration
       Dimensions:
@@ -64,7 +62,6 @@ Resources:
   WebApiIndexLatencyP99Alarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: RailsconfApiIndexLatencyP99
       Namespace: AWS/Lambda
       MetricName: Duration
       Dimensions:
@@ -159,7 +156,6 @@ Resources:
   DeletePostDLQAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: DeletePostDLQAlarm
       Namespace: AWS/SQS
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
