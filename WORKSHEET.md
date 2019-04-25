@@ -8,7 +8,7 @@ A Note: This advice applies primarily to the live workshop. If you're running th
 
 The exercises in this workshop are meant to be completed in order. Ideally, you've already completed Exercise 0 and installed the dependencies for this workshop. If not, I recommend starting right away - the introductory slides will be on video after the conference.
 
-I'll be live coding Exercises 1-3 after the introductory slides, with some explanation of what we're doing in each step. I generally recommend that you try to complete the exercises during the workshop, as we're both here to help you live and in person. However, if you fall behind, or if an instruction is confusing and you get stuck, I've included snapshots of what the code should look like after exercises 1, 2, 3, and even 4 (the optional/take-home exercise) are complete. Feel free to compare code, or copy one of those snapshots and resume from them.
+At the live workshop, we'll be going around to help throughout, and occasionally demoing certain parts of the process live. If you fall behind, or if an instruction is confusing and you get stuck, I've included snapshots of what the code should look like after exercises 1, 2, 3, and even 4 (the optional/take-home exercise) are complete. Feel free to compare code, or copy one of those snapshots and resume from them.
 
 Some pointers to keep in mind:
 
