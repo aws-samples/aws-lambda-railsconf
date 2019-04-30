@@ -10,10 +10,13 @@ The exercises in this workshop are meant to be completed in order. Ideally, you'
 
 At the live workshop, we'll be going around to help throughout, and occasionally demoing certain parts of the process live. If you fall behind, or if an instruction is confusing and you get stuck, I've included snapshots of what the code should look like after exercises 1, 2, 3, and even 4 (the optional/take-home exercise) are complete. Feel free to compare code, or copy one of those snapshots and resume from them.
 
+Ask questions early and often! We'll be demoing answers to common questions as they come up, but most of the time is intended for us to help you one-on-one! Take advantage.
+
 Some pointers to keep in mind:
 
 * Make sure you pay attention to `--region` settings, when used. One key point is that the region your source bucket is in, much match the region you deploy to.
 * Because the template file is YAML formatted, indentation matters. If you're getting a deployment error that doesn't make sense, there's a good chance your YAML file isn't indented properly somewhere.
+* Make extra sure that you're using Ruby 2.5 in your command line where you build dependencies. If your shell defaults to Ruby 2.6, you may end up with mysterious errors after deploying, because vendored dependency file paths are sensitive to the Ruby minor version in use. Ruby 2.5.5 is recommended, but any Ruby version in the 2.5.x family should work.
 
 ## Exercise 0: Setup
 
