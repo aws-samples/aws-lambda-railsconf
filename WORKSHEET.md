@@ -64,7 +64,7 @@ You will need to have an S3 bucket to use for storing your code artifacts when d
 
 ```shell
 # substitute a unique name for your bucket
-export $RAILSCONF_SOURCE_BUCKET=my-railsconf-source-bucket
+export RAILSCONF_SOURCE_BUCKET=my-railsconf-source-bucket
 aws s3api create-bucket --bucket $RAILSCONF_SOURCE_BUCKET --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2
 ```
 
