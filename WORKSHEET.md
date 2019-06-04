@@ -1213,7 +1213,8 @@ Resources:
         PrivilegedMode: false
         Type: LINUX_CONTAINER
         EnvironmentVariables:
-          - SOURCE_BUCKET_NAME: !Ref SourceBucketName
+          - Name: SOURCE_BUCKET_NAME
+            Value: !Ref SourceBucketName
       ServiceRole:
         Fn::GetAtt:
           - BuildProjectRole
